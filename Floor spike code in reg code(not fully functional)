@@ -1,0 +1,402 @@
+###IMPORTS AND INITIALIZATIONS
+###IMPORTS AND INITIALIZATIONS
+import pygame
+from time import sleep
+import math
+# Is used to help locate and load files/assets
+import os
+from os.path import isfile, join
+
+pygame.mixer.init()
+pygame.init()
+pygame.font.init()
+
+###WINDOW DISPLAY SETUP
+WINDOW_WIDTH = 1200
+WINDOW_HEIGHT = 700
+WINDOW = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+NAME = pygame.display.set_caption("Diggy's Dungeon Disaster")
+FPS = 60
+###ASSETS
+# Fonts
+HEALTH_BAR_FONT = pygame.font.SysFont("elixIR", 17)
+
+# Images
+BACKGROUND = pygame.image.load(join("assets", "Background", "Cave dungeon.png"))
+FAIL_SCREEN = pygame.image.load(join("assets", "Background", "DIGGY_DIED.png"))
+wall = pygame.image.load(join("assets", "Background", "cave wall.png"))
+base_diggy = pygame.image.load(join("assets", "Characters", "Diggy", "Diggy.png"))
+floor = pygame.image.load(join("assets", "Background", "cave floor.png"))
+spike = pygame.image.load(join("assets", "Background", "Falling_Spike.png"))
+
+PLAYER_WIDTH = 60
+PLAYER_HEIGHT = 80
+
+# Transformed images
+OFF_DIGGY = pygame.transform.scale(base_diggy, (PLAYER_WIDTH, PLAYER_HEIGHT))
+LONG_WALL = pygame.transform.scale(wall, (188, 700))
+
+
+# Game sound affects
+
+
+# All colours
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+
+
+class Player:
+    def __init__(self, png, x, y, radius, colour, vel_a, vel_d, gravity, jump_count):
+        self.png = png
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.colour = colour
+        self.vel_a = vel_a
+        self.vel_d = vel_d
+        self.gravity = gravity
+        self.jump = False
+        self.jump_count = jump_count
+
+    # create the player
+    def create(self):
+        pygame.draw.circle(WINDOW, self.colour, (self.x, self.y), self.radius)
+        WINDOW.blit(self.png, (self.x - (self.radius + self.radius / 2), self.y - self.radius))
+
+
+class HealthBar():
+    def __init__(self, health_num, width):
+        self.health_num = health_num
+        self.width = width
+
+    # create the health bar
+    def spawn_health(self):
+        bar_text = HEALTH_BAR_FONT.render("Health: ", 1, WHITE)
+        health = HEALTH_BAR_FONT.render("100", 1.7, WHITE)
+        WINDOW.blit(bar_text, (100, 25))
+        WINDOW.blit(health, (175, 25))
+        health_bar = pygame.draw.rect(WINDOW, RED, (100, 50, self.width, 25))
+
+    # reset the players health bar to max
+    def reset_health(self):
+        self.width = 100
+
+
+class Background:
+    def __init__(self, png, x, y, x_vel):
+        self.png = png
+        self.x = x
+        self.y = y
+        self.x_vel = x_vel
+
+    # create the background
+    def create(self):
+        WINDOW.blit(self.png, (self.x, self.y))
+
+
+class Block:
+    def __init__(self, png, x, y, width, height, x_vel, rep):
+        self.png = png
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.x_vel = x_vel
+        self.rep = rep
+
+    # create the block
+    def create(self):
+        pygame.draw.rect(WINDOW, WHITE, (self.x, self.y, self.width, self.height))
+
+    #paste the image 1 or more times onto the block
+    def mask(self):
+        displacement = 0
+        for i in range(self.rep):
+            WINDOW.blit(self.png, (self.x + displacement, self.y))
+            displacement += 174
+
+
+class Spikes:
+    def __init__(self, png, x, y, width, height, colour, x_vel, fall_vel):
+        self.png = png
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.colour = colour
+        self.x_vel = x_vel
+        self.fall_vel = fall_vel
+
+    # create the falling spike
+    def create(self):
+        pygame.draw.rect(WINDOW, self.colour, (self.x, self.y, self.width, self.height))
+
+        WINDOW.blit(self.png, (self.x - 10,self.y))
+
+    def reset_vel(self):
+        self.fall_vel = 25
+
+class FloorSpike:
+    def __init__(self, colour, x, y, width, height):
+        self.colour = colour
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+
+
+    def create(self):
+        pygame.draw.rect(WINDOW, RED,(self.x, self.y, self.width, self.height))
+
+class CheckPoint():
+    def __init__(self, x, y, radius, x_vel):
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.x_vel = x_vel
+
+    #create the check point
+    def create(self):
+        pygame.draw.circle(WINDOW, RED, (self.x, self.y), self.radius)
+
+# move any object to the right while charcter moves left
+def move_left(object, move=True):
+
+    object.x -= object.x_vel
+
+    if move == False:
+        object.x -= 0
+
+# move any object to the left while character moves to the right
+def move_right(object, move=True):
+
+    object.x += object.x_vel
+
+    if move == False:
+        object.x += 0
+
+
+# function for any falling spike interacting with the character
+def falling_spike_collision(spike, char, h_bar):
+
+    #Activivate the spike falling when
+    if ((char.x + char.radius) + 60) >= spike.x:
+        distance = 200
+        spike.y += spike.fall_vel
+        spike.fall_vel += 7
+
+    #when the spike collides with the character (y - coordinate)
+    if (spike.y >= (char.y - char.radius)) and (spike.y <= (char.y + 60)):
+        #when the spike collides with the character (x - coordinate)
+        if ((char.x + char.radius) >= spike.x) and ((char.x - char.radius) <= (spike.x + spike.width)):
+
+            #deal damage to character
+            h_bar.width -= 50
+
+def floor_spike_collision(floorspike, char, h_bar):
+    
+    if (char.x - char.radius) >= (floorspike.x + floorspike.width) and (char.x + char.radius) <= (floorspike.x + floorspike.width):
+        h_bar -= 10
+
+#function to reset the postion of the given object
+def reset_object(object, x , y):
+
+    #reset given object using given coordinates
+    object.create()
+
+    #reset the objects x and y coordintes to reset movement
+    object.x = x
+    object.y = y
+
+def game_music():
+
+    pygame.mixer.music.load("background_music.mp3")
+    return pygame.mixer.music.play(-1)
+
+
+def main():
+
+    # Player
+    ball = Player(OFF_DIGGY, 600, WINDOW_HEIGHT - 135, 20, WHITE, 10, 10, 1, 7)
+
+    # Background of game
+    setting = Background(BACKGROUND, 0, 0, 10)
+
+    # Left wall at begining
+    wall_one = Block(LONG_WALL, 0, 0, 188, 700, 10, 1)
+
+    # Second wall that placed before the left wall
+    wall_two = Block(LONG_WALL, -188, 0, 188, 700, 10, 1)
+
+    # temporary spikes
+    spike_test = Spikes(spike,800, 0, 10, 80, BLACK, 10, 25)
+    spike_test_one = Spikes(spike, 900, 0, 10, 80, BLACK, 10, 25)
+
+    #floor spike
+    floor_spike1 = FloorSpike(RED, 400, WINDOW_HEIGHT - 83, 100, 8)
+
+    # Players health bar
+    player_health = HealthBar(100, 100)
+
+    # Check point to start objects from moving at the start
+    front_check = CheckPoint(250, 600, 10, 10)
+
+    # Check point to start objects from moving at the end
+    back_check = CheckPoint(3550, 600, 10, 10)
+
+    # I NEED A FLOOR
+    floor_one = Block(floor, -100, WINDOW_HEIGHT - 75, 8000, 200, 20, 40)
+
+    run = True
+
+    while run:
+
+
+        pygame.time.delay(50)
+
+        #create background
+        setting.create()
+
+        #analyze when keys get pressed
+        keys = pygame.key.get_pressed()
+
+        #move character to the left when the a key is pressed
+        if keys[pygame.K_a]:
+
+            ball.x -= ball.vel_a
+
+            #if the charcter moves to the right side of the screen before hiting the check point
+            if ((ball.x - ball.radius) <= 260) and ((ball.x - ball.radius) > front_check.x):
+
+                #character will stop at x = 260, while objects move in the opposite direction
+                ball.vel_a = 0
+                ball.vel_d = 10
+
+
+                move_right(setting)
+                move_right(spike_test)
+                move_right(spike_test_one)
+                move_right(wall_one)
+                move_right(wall_two)
+                move_right(front_check)
+                move_right(back_check)
+                move_right(floor_one)
+
+                #when the character moves past the check point on the left side of the map
+                if ((ball.x - ball.radius) <= front_check.x):
+                    ball.vel_a = 10
+                    ball.vel_d = 10
+
+            # if the charcter is in the middle part of the screen (between 260 - 940)
+            if (ball.x > 260) and (ball.x < 940):
+                ball.vel_a = 10
+                ball.vel_d = 10
+
+            #if the character touches the wall on the left side of the map
+            if (ball.x - ball.radius) <= (wall_one.x + wall_one.width):
+                ball.vel_a = 0
+                ball.vel_d = 10
+
+        #move character to the right when the d key is pressed
+        if keys[pygame.K_d]:
+
+            ball.x += ball.vel_d
+
+            if ((ball.x + ball.radius) >= 940) and ((ball.x + ball.radius) < back_check.x):
+
+                # character will stop at x = 940, while objects move in the opposite direction
+                ball.vel_a = 10
+                ball.vel_d = 0
+
+
+                move_left(setting)
+                move_left(spike_test)
+                move_left(spike_test_one)
+                move_left(wall_one)
+                move_left(wall_two)
+                move_left(front_check)
+                move_left(back_check)
+                move_left(floor_one)
+
+            # if the charcter is in the middle part of the screen (between 260 - 940)
+            if (ball.x > 260) and (ball.x < 940):
+                ball.vel_a = 10
+                ball.vel_d = 10
+
+            # if the chacter moves past the checkpoint of the right side of the map, stop moving objects and only move
+            if ((ball.x + ball.radius) >= back_check.x):
+                ball.vel_a = 10
+                ball.vel_d = 10
+
+        if not (ball.jump):
+
+            if keys[pygame.K_SPACE]:
+                ball.jump = True
+
+        else:
+            if ball.jump_count >= -7:
+                ball.y -= (ball.jump_count * abs(ball.jump_count))
+                ball.jump_count -= 1
+
+            else:
+                ball.jump_count = 7
+                ball.jump = False
+
+
+        ball.create()
+
+        wall_one.create()
+        wall_two.create()
+        wall_one.mask()
+        wall_two.mask()
+
+        floor_one.create()
+        floor_one.mask()
+
+        spike_test.create()
+        spike_test_one.create()
+
+        floor_spike1.create()
+
+        front_check.create()
+        back_check.create()
+
+        falling_spike_collision(spike_test, ball, player_health)
+        falling_spike_collision(spike_test_one, ball, player_health)
+
+        player_health.spawn_health()
+
+
+        if player_health.width == 0:
+            WINDOW.blit(FAIL_SCREEN, (0,0))
+
+            if keys[pygame.K_r]:
+
+                reset_object(ball, 600, WINDOW_HEIGHT - 135)
+                reset_object(wall_one, 0,0)
+                reset_object(wall_two, -188, 0)
+                reset_object(spike_test, 800, 0)
+                reset_object(spike_test_one, 900, 0)
+                reset_object(front_check, 250, 600)
+                reset_object(back_check, 3550, 600)
+                reset_object(floor_one, -100, WINDOW_HEIGHT - 75)
+                spike_test.reset_vel()
+                spike_test_one.reset_vel()
+                player_health.reset_health()
+
+
+
+        pygame.display.update()
+
+
+        # Close the game when the user clicks the "x" in the corner
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+        print(game_music())
+    pygame.quit()
+
+
+print(main())
