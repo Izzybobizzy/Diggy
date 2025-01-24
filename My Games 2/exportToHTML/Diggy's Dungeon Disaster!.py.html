@@ -1,0 +1,796 @@
+<html>
+<head>
+<title>Diggy's Dungeon Disaster!.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #7a7e85;}
+.s1 { color: #bcbec4;}
+.s2 { color: #cf8e6d;}
+.s3 { color: #bcbec4;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+Diggy's Dungeon Disaster!.py</font>
+</center></td></tr></table>
+<pre><span class="s0">###IMPORTS AND INITIALIZATIONS</span>
+<span class="s2">import </span><span class="s1">pygame</span>
+<span class="s2">from </span><span class="s1">time </span><span class="s2">import </span><span class="s1">sleep</span>
+<span class="s2">import </span><span class="s1">math</span>
+<span class="s0"># Is used to help locate and load files/assets</span>
+<span class="s2">import </span><span class="s1">os</span>
+<span class="s2">from </span><span class="s1">os</span><span class="s3">.</span><span class="s1">path </span><span class="s2">import </span><span class="s1">isfile</span><span class="s3">, </span><span class="s1">join</span>
+
+<span class="s1">pygame</span><span class="s3">.</span><span class="s1">mixer</span><span class="s3">.</span><span class="s1">init</span><span class="s3">()</span>
+<span class="s1">pygame</span><span class="s3">.</span><span class="s1">init</span><span class="s3">()</span>
+<span class="s1">pygame</span><span class="s3">.</span><span class="s1">font</span><span class="s3">.</span><span class="s1">init</span><span class="s3">()</span>
+
+<span class="s0">###WINDOW DISPLAY SETUP</span>
+<span class="s1">WINDOW_WIDTH </span><span class="s3">= </span><span class="s4">1200</span>
+<span class="s1">WINDOW_HEIGHT </span><span class="s3">= </span><span class="s4">700</span>
+<span class="s1">WINDOW </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">display</span><span class="s3">.</span><span class="s1">set_mode</span><span class="s3">((</span><span class="s1">WINDOW_WIDTH</span><span class="s3">, </span><span class="s1">WINDOW_HEIGHT</span><span class="s3">))</span>
+<span class="s1">NAME </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">display</span><span class="s3">.</span><span class="s1">set_caption</span><span class="s3">(</span><span class="s5">&quot;Diggy's Dungeon Disaster&quot;</span><span class="s3">)</span>
+<span class="s1">FPS </span><span class="s3">= </span><span class="s4">60</span>
+
+<span class="s0">###ASSETS</span>
+<span class="s0"># Fonts</span>
+<span class="s1">HEALTH_BAR_FONT </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">font</span><span class="s3">.</span><span class="s1">SysFont</span><span class="s3">(</span><span class="s5">&quot;elixIR&quot;</span><span class="s3">, </span><span class="s4">17</span><span class="s3">)</span>
+
+<span class="s0"># Images</span>
+<span class="s1">BACKGROUND </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">image</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">join</span><span class="s3">(</span><span class="s5">&quot;assets&quot;</span><span class="s3">,</span><span class="s5">&quot;Background&quot;</span><span class="s3">,</span><span class="s5">&quot;Cave dungeon.png&quot;</span><span class="s3">))</span>
+<span class="s1">FAIL_SCREEN </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">image</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">join</span><span class="s3">(</span><span class="s5">&quot;assets&quot;</span><span class="s3">,</span><span class="s5">&quot;Background&quot;</span><span class="s3">,</span><span class="s5">&quot;DIGGY_DIED.png&quot;</span><span class="s3">))</span>
+<span class="s1">ESCAPE_SCREEN </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">image</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">join</span><span class="s3">(</span><span class="s5">&quot;assets&quot;</span><span class="s3">,</span><span class="s5">&quot;Background&quot;</span><span class="s3">,</span><span class="s5">&quot;DIGGY_ESCAPED.png&quot;</span><span class="s3">))</span>
+<span class="s1">wall </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">image</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">join</span><span class="s3">(</span><span class="s5">&quot;assets&quot;</span><span class="s3">,</span><span class="s5">&quot;Background&quot;</span><span class="s3">,</span><span class="s5">&quot;cave wall.png&quot;</span><span class="s3">))</span>
+<span class="s1">base_diggy </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">image</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">join</span><span class="s3">(</span><span class="s5">&quot;assets&quot;</span><span class="s3">,</span><span class="s5">&quot;Characters&quot;</span><span class="s3">,</span><span class="s5">&quot;Diggy.png&quot;</span><span class="s3">))</span>
+<span class="s1">floor </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">image</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">join</span><span class="s3">(</span><span class="s5">&quot;assets&quot;</span><span class="s3">,</span><span class="s5">&quot;Background&quot;</span><span class="s3">,</span><span class="s5">&quot;cave floor.png&quot;</span><span class="s3">))</span>
+<span class="s1">spike </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">image</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">join</span><span class="s3">(</span><span class="s5">&quot;assets&quot;</span><span class="s3">,</span><span class="s5">&quot;Background&quot;</span><span class="s3">,</span><span class="s5">&quot;Falling_Spike.png&quot;</span><span class="s3">))</span>
+<span class="s1">floor_spike </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">image</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">join</span><span class="s3">(</span><span class="s5">&quot;assets&quot;</span><span class="s3">,</span><span class="s5">&quot;Background&quot;</span><span class="s3">,</span><span class="s5">&quot;F_SPIKE.png&quot;</span><span class="s3">))</span>
+<span class="s1">DOOR </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">image</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s1">join</span><span class="s3">(</span><span class="s5">&quot;assets&quot;</span><span class="s3">,</span><span class="s5">&quot;Background&quot;</span><span class="s3">,</span><span class="s5">&quot;Door.png&quot;</span><span class="s3">))</span>
+
+<span class="s1">PLAYER_WIDTH </span><span class="s3">= </span><span class="s4">60</span>
+<span class="s1">PLAYER_HEIGHT </span><span class="s3">= </span><span class="s4">80</span>
+
+<span class="s0"># Transformed images</span>
+<span class="s1">OFF_DIGGY </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">transform</span><span class="s3">.</span><span class="s1">scale</span><span class="s3">(</span><span class="s1">base_diggy</span><span class="s3">, (</span><span class="s1">PLAYER_WIDTH</span><span class="s3">, </span><span class="s1">PLAYER_HEIGHT</span><span class="s3">))</span>
+<span class="s1">LONG_WALL </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">transform</span><span class="s3">.</span><span class="s1">scale</span><span class="s3">(</span><span class="s1">wall</span><span class="s3">, (</span><span class="s4">188</span><span class="s3">, </span><span class="s4">700</span><span class="s3">))</span>
+<span class="s1">SPIKE </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">transform</span><span class="s3">.</span><span class="s1">scale</span><span class="s3">(</span><span class="s1">spike</span><span class="s3">, (</span><span class="s4">28</span><span class="s3">, </span><span class="s4">100</span><span class="s3">))</span>
+
+<span class="s0">#Music</span>
+<span class="s1">music </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">mixer</span><span class="s3">.</span><span class="s1">music</span><span class="s3">.</span><span class="s1">load</span><span class="s3">(</span><span class="s5">&quot;background_music.mp3&quot;</span><span class="s3">)</span>
+<span class="s1">pygame</span><span class="s3">.</span><span class="s1">mixer</span><span class="s3">.</span><span class="s1">music</span><span class="s3">.</span><span class="s1">play</span><span class="s3">(-</span><span class="s4">1</span><span class="s3">)</span>
+
+<span class="s0"># Game sound affects</span>
+<span class="s1">HURT_SFX </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">mixer</span><span class="s3">.</span><span class="s1">Sound</span><span class="s3">(</span><span class="s5">&quot;Ouchie_audio.mp3&quot;</span><span class="s3">)</span>
+<span class="s0">##SPIKE_DETACH_SFX = pygame.mixer.Sound(&quot;spike_detach.mp3&quot;)</span>
+<span class="s0">##WALK_SFX = pygame.mixer.Sound(&quot;walking_sfx.mp3&quot;)</span>
+<span class="s0">##DEATH_SFX = pygame.mixer.Sound(&quot;death_sfx.mp3&quot;)</span>
+
+<span class="s0"># All colours</span>
+<span class="s1">WHITE </span><span class="s3">= (</span><span class="s4">255</span><span class="s3">, </span><span class="s4">255</span><span class="s3">, </span><span class="s4">255</span><span class="s3">)</span>
+<span class="s1">BLACK </span><span class="s3">= (</span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+<span class="s1">RED </span><span class="s3">= (</span><span class="s4">255</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+
+
+<span class="s2">class </span><span class="s1">Player</span><span class="s3">:</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">png</span><span class="s3">, </span><span class="s1">x</span><span class="s3">, </span><span class="s1">y</span><span class="s3">, </span><span class="s1">radius</span><span class="s3">, </span><span class="s1">colour</span><span class="s3">, </span><span class="s1">vel_a</span><span class="s3">, </span><span class="s1">vel_d</span><span class="s3">, </span><span class="s1">gravity</span><span class="s3">, </span><span class="s1">jump_count</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">png </span><span class="s3">= </span><span class="s1">png</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">x </span><span class="s3">= </span><span class="s1">x</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">y </span><span class="s3">= </span><span class="s1">y</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">radius </span><span class="s3">= </span><span class="s1">radius</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">colour </span><span class="s3">= </span><span class="s1">colour</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">vel_a </span><span class="s3">= </span><span class="s1">vel_a</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">vel_d </span><span class="s3">= </span><span class="s1">vel_d</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">gravity </span><span class="s3">= </span><span class="s1">gravity</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">jump </span><span class="s3">= </span><span class="s2">False</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">jump_count </span><span class="s3">= </span><span class="s1">jump_count</span>
+
+    <span class="s0"># create the player</span>
+    <span class="s2">def </span><span class="s1">create</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">pygame</span><span class="s3">.</span><span class="s1">draw</span><span class="s3">.</span><span class="s1">circle</span><span class="s3">(</span><span class="s1">WINDOW</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">colour</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y</span><span class="s3">), </span><span class="s1">self</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">)</span>
+        <span class="s1">WINDOW</span><span class="s3">.</span><span class="s1">blit</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">png</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">radius </span><span class="s3">+ </span><span class="s1">self</span><span class="s3">.</span><span class="s1">radius </span><span class="s3">/ </span><span class="s4">2</span><span class="s3">), </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y </span><span class="s3">- </span><span class="s1">self</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">))</span>
+
+
+<span class="s2">class </span><span class="s1">HealthBar</span><span class="s3">:</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">health_num</span><span class="s3">, </span><span class="s1">width</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">health_num </span><span class="s3">= </span><span class="s1">health_num</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">width </span><span class="s3">= </span><span class="s1">width</span>
+
+    <span class="s0"># create the health bar</span>
+    <span class="s2">def </span><span class="s1">spawn_health</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">health_bar </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">draw</span><span class="s3">.</span><span class="s1">rect</span><span class="s3">(</span><span class="s1">WINDOW</span><span class="s3">, </span><span class="s1">RED</span><span class="s3">, (</span><span class="s4">100</span><span class="s3">, </span><span class="s4">50</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">width</span><span class="s3">, </span><span class="s4">25</span><span class="s3">))</span>
+        <span class="s1">bar_text </span><span class="s3">= </span><span class="s1">HEALTH_BAR_FONT</span><span class="s3">.</span><span class="s1">render</span><span class="s3">(</span><span class="s5">f&quot;Health:  </span><span class="s2">{</span><span class="s1">health_bar</span><span class="s3">.</span><span class="s1">width</span><span class="s2">} </span><span class="s5">&quot;</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s1">WHITE</span><span class="s3">)</span>
+        <span class="s1">WINDOW</span><span class="s3">.</span><span class="s1">blit</span><span class="s3">(</span><span class="s1">bar_text</span><span class="s3">, (</span><span class="s4">100</span><span class="s3">, </span><span class="s4">25</span><span class="s3">))</span>
+
+    <span class="s0"># reset the players health bar to max</span>
+    <span class="s2">def </span><span class="s1">reset_health</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">width </span><span class="s3">= </span><span class="s4">100</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">health_num </span><span class="s3">= </span><span class="s4">100</span>
+
+
+<span class="s2">class </span><span class="s1">Background</span><span class="s3">:</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">png</span><span class="s3">, </span><span class="s1">x</span><span class="s3">, </span><span class="s1">y</span><span class="s3">, </span><span class="s1">x_vel</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">png </span><span class="s3">= </span><span class="s1">png</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">x </span><span class="s3">= </span><span class="s1">x</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">y </span><span class="s3">= </span><span class="s1">y</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">x_vel </span><span class="s3">= </span><span class="s1">x_vel</span>
+
+    <span class="s0"># create the background</span>
+    <span class="s2">def </span><span class="s1">create</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">WINDOW</span><span class="s3">.</span><span class="s1">blit</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">png</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y</span><span class="s3">))</span>
+
+
+<span class="s2">class </span><span class="s1">Block</span><span class="s3">:</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">png</span><span class="s3">, </span><span class="s1">x</span><span class="s3">, </span><span class="s1">y</span><span class="s3">, </span><span class="s1">width</span><span class="s3">, </span><span class="s1">height</span><span class="s3">, </span><span class="s1">x_vel</span><span class="s3">, </span><span class="s1">rep</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">png </span><span class="s3">= </span><span class="s1">png</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">x </span><span class="s3">= </span><span class="s1">x</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">y </span><span class="s3">= </span><span class="s1">y</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">width </span><span class="s3">= </span><span class="s1">width</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">height </span><span class="s3">= </span><span class="s1">height</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">x_vel </span><span class="s3">= </span><span class="s1">x_vel</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">rep </span><span class="s3">= </span><span class="s1">rep</span>
+
+    <span class="s0"># create the block</span>
+    <span class="s2">def </span><span class="s1">create</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">pygame</span><span class="s3">.</span><span class="s1">draw</span><span class="s3">.</span><span class="s1">rect</span><span class="s3">(</span><span class="s1">WINDOW</span><span class="s3">, </span><span class="s1">WHITE</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">width</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">height</span><span class="s3">))</span>
+
+    <span class="s0">#paste the image 1 or more times onto the block</span>
+    <span class="s2">def </span><span class="s1">mask</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">displacement </span><span class="s3">= </span><span class="s4">0</span>
+        <span class="s2">for </span><span class="s1">i </span><span class="s2">in </span><span class="s1">range</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">rep</span><span class="s3">):</span>
+            <span class="s1">WINDOW</span><span class="s3">.</span><span class="s1">blit</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">png</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+ </span><span class="s1">displacement</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y</span><span class="s3">))</span>
+            <span class="s1">displacement </span><span class="s3">+= </span><span class="s4">174</span>
+
+    <span class="s0">#create the door to escape</span>
+    <span class="s2">def </span><span class="s1">escape_door</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">pygame</span><span class="s3">.</span><span class="s1">draw</span><span class="s3">.</span><span class="s1">rect</span><span class="s3">(</span><span class="s1">WINDOW</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">width</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">height</span><span class="s3">))</span>
+
+        <span class="s1">WINDOW</span><span class="s3">.</span><span class="s1">blit</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">png</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">240</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y </span><span class="s3">+ </span><span class="s4">10</span><span class="s3">))</span>
+
+<span class="s2">class </span><span class="s1">Spikes</span><span class="s3">:</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">png</span><span class="s3">, </span><span class="s1">x</span><span class="s3">, </span><span class="s1">y</span><span class="s3">, </span><span class="s1">width</span><span class="s3">, </span><span class="s1">height</span><span class="s3">, </span><span class="s1">colour</span><span class="s3">, </span><span class="s1">x_vel</span><span class="s3">, </span><span class="s1">fall_vel</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">png </span><span class="s3">= </span><span class="s1">png</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">x </span><span class="s3">= </span><span class="s1">x</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">y </span><span class="s3">= </span><span class="s1">y</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">width </span><span class="s3">= </span><span class="s1">width</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">height </span><span class="s3">= </span><span class="s1">height</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">colour </span><span class="s3">= </span><span class="s1">colour</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">x_vel </span><span class="s3">= </span><span class="s1">x_vel</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">fall_vel </span><span class="s3">= </span><span class="s1">fall_vel</span>
+
+    <span class="s0"># create the falling spike</span>
+    <span class="s2">def </span><span class="s1">create</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">pygame</span><span class="s3">.</span><span class="s1">draw</span><span class="s3">.</span><span class="s1">rect</span><span class="s3">(</span><span class="s1">WINDOW</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">colour</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">width</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">height</span><span class="s3">))</span>
+
+        <span class="s1">WINDOW</span><span class="s3">.</span><span class="s1">blit</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">png</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">10</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y</span><span class="s3">))</span>
+
+    <span class="s2">def </span><span class="s1">reset_vel</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">fall_vel </span><span class="s3">= </span><span class="s4">25</span>
+
+<span class="s2">class </span><span class="s1">FloorSpikes</span><span class="s3">():</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">png</span><span class="s3">, </span><span class="s1">x</span><span class="s3">, </span><span class="s1">y</span><span class="s3">, </span><span class="s1">width</span><span class="s3">, </span><span class="s1">height</span><span class="s3">, </span><span class="s1">colour</span><span class="s3">, </span><span class="s1">x_vel</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">png </span><span class="s3">= </span><span class="s1">png</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">x </span><span class="s3">= </span><span class="s1">x</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">y </span><span class="s3">= </span><span class="s1">y</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">width </span><span class="s3">= </span><span class="s1">width</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">height </span><span class="s3">= </span><span class="s1">height</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">colour </span><span class="s3">= </span><span class="s1">colour</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">x_vel </span><span class="s3">= </span><span class="s1">x_vel</span>
+
+        <span class="s0">#create the floor spike</span>
+    <span class="s2">def </span><span class="s1">create</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">pygame</span><span class="s3">.</span><span class="s1">draw</span><span class="s3">.</span><span class="s1">rect</span><span class="s3">(</span><span class="s1">WINDOW</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">colour</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">width</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">height</span><span class="s3">))</span>
+
+        <span class="s1">WINDOW</span><span class="s3">.</span><span class="s1">blit</span><span class="s3">(</span><span class="s1">self</span><span class="s3">.</span><span class="s1">png</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">6</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y </span><span class="s3">- </span><span class="s4">25</span><span class="s3">))</span>
+
+<span class="s2">class </span><span class="s1">CheckPoint</span><span class="s3">:</span>
+    <span class="s2">def </span><span class="s1">__init__</span><span class="s3">(</span><span class="s1">self</span><span class="s3">, </span><span class="s1">x</span><span class="s3">, </span><span class="s1">y</span><span class="s3">, </span><span class="s1">radius</span><span class="s3">, </span><span class="s1">x_vel</span><span class="s3">):</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">x </span><span class="s3">= </span><span class="s1">x</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">y </span><span class="s3">= </span><span class="s1">y</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">radius </span><span class="s3">= </span><span class="s1">radius</span>
+        <span class="s1">self</span><span class="s3">.</span><span class="s1">x_vel </span><span class="s3">= </span><span class="s1">x_vel</span>
+
+    <span class="s0">#create the check point</span>
+    <span class="s2">def </span><span class="s1">create</span><span class="s3">(</span><span class="s1">self</span><span class="s3">):</span>
+        <span class="s1">pygame</span><span class="s3">.</span><span class="s1">draw</span><span class="s3">.</span><span class="s1">circle</span><span class="s3">(</span><span class="s1">WINDOW</span><span class="s3">, </span><span class="s1">RED</span><span class="s3">, (</span><span class="s1">self</span><span class="s3">.</span><span class="s1">x</span><span class="s3">, </span><span class="s1">self</span><span class="s3">.</span><span class="s1">y</span><span class="s3">), </span><span class="s1">self</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">)</span>
+
+<span class="s0"># move any object to the right while charcter moves left</span>
+<span class="s2">def </span><span class="s1">move_left</span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">move</span><span class="s3">=</span><span class="s2">True</span><span class="s3">):</span>
+
+    <span class="s1">object</span><span class="s3">.</span><span class="s1">x </span><span class="s3">-= </span><span class="s1">object</span><span class="s3">.</span><span class="s1">x_vel</span>
+
+    <span class="s2">if </span><span class="s1">move </span><span class="s3">== </span><span class="s2">False</span><span class="s3">:</span>
+        <span class="s1">object</span><span class="s3">.</span><span class="s1">x </span><span class="s3">-= </span><span class="s4">0</span>
+
+<span class="s0"># move any object to the left while character moves to the right</span>
+<span class="s2">def </span><span class="s1">move_right</span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">move</span><span class="s3">=</span><span class="s2">True</span><span class="s3">):</span>
+
+    <span class="s1">object</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+= </span><span class="s1">object</span><span class="s3">.</span><span class="s1">x_vel</span>
+
+    <span class="s2">if </span><span class="s1">move </span><span class="s3">== </span><span class="s2">False</span><span class="s3">:</span>
+        <span class="s1">object</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+= </span><span class="s4">0</span>
+
+<span class="s0"># function for any falling spike interacting with the character</span>
+<span class="s2">def </span><span class="s1">falling_spike_collision</span><span class="s3">(</span><span class="s1">spike</span><span class="s3">, </span><span class="s1">char</span><span class="s3">,</span><span class="s1">check</span><span class="s3">, </span><span class="s1">h_bar</span><span class="s3">):</span>
+
+    <span class="s0">#move checkpoint off the bottom of the screen when the character passes it</span>
+    <span class="s2">if </span><span class="s1">check</span><span class="s3">.</span><span class="s1">x </span><span class="s3">&lt;= </span><span class="s1">char</span><span class="s3">.</span><span class="s1">x</span><span class="s3">:</span>
+        <span class="s1">check</span><span class="s3">.</span><span class="s1">y </span><span class="s3">+= </span><span class="s4">200</span>
+
+    <span class="s0">#After the check point moves off screen (instantaniously)</span>
+    <span class="s2">if </span><span class="s1">check</span><span class="s3">.</span><span class="s1">y </span><span class="s3">&gt; </span><span class="s4">700</span><span class="s3">:</span>
+
+        <span class="s0">#let the spike fall</span>
+        <span class="s1">spike</span><span class="s3">.</span><span class="s1">y </span><span class="s3">+= </span><span class="s1">spike</span><span class="s3">.</span><span class="s1">fall_vel</span>
+        <span class="s1">spike</span><span class="s3">.</span><span class="s1">fall_vel </span><span class="s3">+= </span><span class="s4">13</span>
+
+
+    <span class="s0">#when the spike collides with the character (y - coordinate)</span>
+    <span class="s2">if </span><span class="s3">(</span><span class="s1">spike</span><span class="s3">.</span><span class="s1">y </span><span class="s3">&gt;= (</span><span class="s1">char</span><span class="s3">.</span><span class="s1">y </span><span class="s3">- </span><span class="s1">char</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">)) </span><span class="s2">and </span><span class="s3">(</span><span class="s1">spike</span><span class="s3">.</span><span class="s1">y </span><span class="s3">&lt;= (</span><span class="s1">char</span><span class="s3">.</span><span class="s1">y </span><span class="s3">+ </span><span class="s4">60</span><span class="s3">)):</span>
+        <span class="s0">#when the spike collides with the character (x - coordinate)</span>
+        <span class="s2">if </span><span class="s3">((</span><span class="s1">char</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+ </span><span class="s1">char</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &gt;= </span><span class="s1">spike</span><span class="s3">.</span><span class="s1">x</span><span class="s3">) </span><span class="s2">and </span><span class="s3">((</span><span class="s1">char</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s1">char</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &lt;= (</span><span class="s1">spike</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+ </span><span class="s1">spike</span><span class="s3">.</span><span class="s1">width</span><span class="s3">)):</span>
+
+            <span class="s0">#deal damage to character</span>
+            <span class="s1">h_bar</span><span class="s3">.</span><span class="s1">width </span><span class="s3">-= </span><span class="s4">25</span>
+            <span class="s1">h_bar</span><span class="s3">.</span><span class="s1">health_num </span><span class="s3">-= </span><span class="s4">25</span>
+            <span class="s1">HURT_SFX</span><span class="s3">.</span><span class="s1">play</span><span class="s3">()</span>
+
+<span class="s0"># function for when charcter collides with floor spikes</span>
+<span class="s2">def </span><span class="s1">floor_spike_collision</span><span class="s3">(</span><span class="s1">floorspike</span><span class="s3">, </span><span class="s1">char</span><span class="s3">, </span><span class="s1">h_bar</span><span class="s3">):</span>
+    <span class="s0">## if the player collides with spike</span>
+    <span class="s2">if </span><span class="s3">(</span><span class="s1">char</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+ </span><span class="s1">char</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &gt;= </span><span class="s1">floorspike</span><span class="s3">.</span><span class="s1">x </span><span class="s2">and </span><span class="s3">(</span><span class="s1">char</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s1">char</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &lt;= (</span><span class="s1">floorspike</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+ </span><span class="s1">floorspike</span><span class="s3">.</span><span class="s1">width</span><span class="s3">):</span>
+        <span class="s2">if </span><span class="s3">((</span><span class="s1">char</span><span class="s3">.</span><span class="s1">y </span><span class="s3">+ </span><span class="s1">char</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) + </span><span class="s4">60</span><span class="s3">) &gt;= (</span><span class="s1">floorspike</span><span class="s3">.</span><span class="s1">y</span><span class="s3">):</span>
+            <span class="s1">h_bar</span><span class="s3">.</span><span class="s1">width </span><span class="s3">-= </span><span class="s4">1</span>
+            <span class="s1">pygame</span><span class="s3">.</span><span class="s1">time</span><span class="s3">.</span><span class="s1">wait</span><span class="s3">(</span><span class="s4">100</span><span class="s3">)</span>
+
+<span class="s0">#function to reset the postion of the given object</span>
+<span class="s2">def </span><span class="s1">reset_object</span><span class="s3">(</span><span class="s1">object</span><span class="s3">, </span><span class="s1">x </span><span class="s3">, </span><span class="s1">y</span><span class="s3">):</span>
+
+    <span class="s0">#reset given object using given coordinates</span>
+    <span class="s1">object</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+
+    <span class="s0">#reset the objects x and y coordintes to reset movement</span>
+    <span class="s1">object</span><span class="s3">.</span><span class="s1">x </span><span class="s3">= </span><span class="s1">x</span>
+    <span class="s1">object</span><span class="s3">.</span><span class="s1">y </span><span class="s3">= </span><span class="s1">y</span>
+
+
+<span class="s0">#main game</span>
+<span class="s2">def </span><span class="s1">main</span><span class="s3">():</span>
+
+    <span class="s0"># Player</span>
+    <span class="s1">ball </span><span class="s3">= </span><span class="s1">Player</span><span class="s3">(</span><span class="s1">OFF_DIGGY</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s1">WINDOW_HEIGHT </span><span class="s3">- </span><span class="s4">135</span><span class="s3">, </span><span class="s4">20</span><span class="s3">, </span><span class="s1">WHITE</span><span class="s3">, </span><span class="s4">12</span><span class="s3">, </span><span class="s4">12</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">7</span><span class="s3">)</span>
+
+    <span class="s0"># Background of game</span>
+    <span class="s1">setting </span><span class="s3">= </span><span class="s1">Background</span><span class="s3">(</span><span class="s1">BACKGROUND</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+
+    <span class="s0"># Left wall at begining</span>
+    <span class="s1">wall_one </span><span class="s3">= </span><span class="s1">Block</span><span class="s3">(</span><span class="s1">LONG_WALL</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">188</span><span class="s3">, </span><span class="s4">700</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">1</span><span class="s3">)</span>
+
+    <span class="s0"># Second wall that placed before the left wall</span>
+    <span class="s1">wall_two </span><span class="s3">= </span><span class="s1">Block</span><span class="s3">(</span><span class="s1">LONG_WALL</span><span class="s3">, -</span><span class="s4">188</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">188</span><span class="s3">, </span><span class="s4">700</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">1</span><span class="s3">)</span>
+
+    <span class="s0">#Wall on right side of map where the exit is</span>
+    <span class="s1">wall_three </span><span class="s3">= </span><span class="s1">Block</span><span class="s3">(</span><span class="s1">LONG_WALL</span><span class="s3">, </span><span class="s4">3700</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">188</span><span class="s3">, </span><span class="s4">700</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">1</span><span class="s3">)</span>
+
+    <span class="s0">#The escape door</span>
+    <span class="s1">door </span><span class="s3">= </span><span class="s1">Block</span><span class="s3">(</span><span class="s1">DOOR</span><span class="s3">,</span><span class="s4">3700</span><span class="s3">, </span><span class="s4">500</span><span class="s3">, </span><span class="s4">1</span><span class="s3">,</span><span class="s4">100</span><span class="s3">,</span><span class="s4">10</span><span class="s3">, </span><span class="s4">1</span><span class="s3">)</span>
+
+    <span class="s0">#All falling and non-falling spikes</span>
+    <span class="s1">spike1 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">547</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike2 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">600</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike3 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">786</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike4 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">814</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike5 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">888</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike6 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">929</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike7 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">998</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike8 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">1028</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike9 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">1100</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike10 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">1168</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike11 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">1209</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike12 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">1304</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike13 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">1399</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike14 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">1484</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike15 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">,</span><span class="s4">1563</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike16 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">1664</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike17 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">1811</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike18 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">1900</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike19 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2001</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike20 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2099</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike21 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2152</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike22 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2271</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike23 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2299</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike24 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2331</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike25 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2399</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike26 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2471</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike27 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2572</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike28 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2621</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike29 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2700</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike30 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2789</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike31 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2850</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike32 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2926</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike33 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">2999</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike34 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">3041</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike35 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">3152</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike36 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">3198</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike37 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">3278</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike38 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">3333</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike39 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">3479</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+    <span class="s1">spike40 </span><span class="s3">= </span><span class="s1">Spikes</span><span class="s3">(</span><span class="s1">SPIKE</span><span class="s3">, </span><span class="s4">3542</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">80</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">25</span><span class="s3">)</span>
+
+    <span class="s0">##floor spikes</span>
+    <span class="s1">floor_spike1 </span><span class="s3">= </span><span class="s1">FloorSpikes</span><span class="s3">(</span><span class="s1">floor_spike</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">624</span><span class="s3">, </span><span class="s4">142</span><span class="s3">, </span><span class="s4">8</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">floor_spike2 </span><span class="s3">= </span><span class="s1">FloorSpikes</span><span class="s3">(</span><span class="s1">floor_spike</span><span class="s3">, </span><span class="s4">1235</span><span class="s3">, </span><span class="s4">624</span><span class="s3">, </span><span class="s4">142</span><span class="s3">, </span><span class="s4">8</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">floor_spike3 </span><span class="s3">= </span><span class="s1">FloorSpikes</span><span class="s3">(</span><span class="s1">floor_spike</span><span class="s3">, </span><span class="s4">1600</span><span class="s3">, </span><span class="s4">624</span><span class="s3">, </span><span class="s4">142</span><span class="s3">, </span><span class="s4">8</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">floor_spike4 </span><span class="s3">= </span><span class="s1">FloorSpikes</span><span class="s3">(</span><span class="s1">floor_spike</span><span class="s3">, </span><span class="s4">2100</span><span class="s3">, </span><span class="s4">624</span><span class="s3">, </span><span class="s4">142</span><span class="s3">, </span><span class="s4">8</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">floor_spike5 </span><span class="s3">= </span><span class="s1">FloorSpikes</span><span class="s3">(</span><span class="s1">floor_spike</span><span class="s3">, </span><span class="s4">2400</span><span class="s3">, </span><span class="s4">624</span><span class="s3">, </span><span class="s4">142</span><span class="s3">, </span><span class="s4">8</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">floor_spike6 </span><span class="s3">= </span><span class="s1">FloorSpikes</span><span class="s3">(</span><span class="s1">floor_spike</span><span class="s3">, </span><span class="s4">2800</span><span class="s3">, </span><span class="s4">624</span><span class="s3">, </span><span class="s4">142</span><span class="s3">, </span><span class="s4">8</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">floor_spike7 </span><span class="s3">= </span><span class="s1">FloorSpikes</span><span class="s3">(</span><span class="s1">floor_spike</span><span class="s3">, </span><span class="s4">3152</span><span class="s3">, </span><span class="s4">624</span><span class="s3">, </span><span class="s4">142</span><span class="s3">, </span><span class="s4">8</span><span class="s3">, </span><span class="s1">BLACK</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+
+
+
+
+    <span class="s0">#corrseponding checkpoints for each of the falling spikes</span>
+    <span class="s1">spike5_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s1">spike5</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">spike8_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s1">spike8</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">spike10_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s1">spike10</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">spike14_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s1">spike14</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">spike18_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s1">spike18</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">spike24_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s1">spike24</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">spike28_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s1">spike28</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">spike33_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s1">spike33</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">spike38_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s1">spike38</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+    <span class="s1">spike39_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s1">spike39</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">1</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+
+
+
+    <span class="s0"># Player health bar</span>
+    <span class="s1">player_health </span><span class="s3">= </span><span class="s1">HealthBar</span><span class="s3">(</span><span class="s4">100</span><span class="s3">, </span><span class="s4">100</span><span class="s3">)</span>
+
+    <span class="s0"># Check point on left side of map</span>
+    <span class="s1">front_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s4">250</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+
+    <span class="s0"># Check point on right side of map</span>
+    <span class="s1">back_check </span><span class="s3">= </span><span class="s1">CheckPoint</span><span class="s3">(</span><span class="s4">3550</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">10</span><span class="s3">, </span><span class="s4">10</span><span class="s3">)</span>
+
+    <span class="s0"># main floor</span>
+    <span class="s1">floor_one </span><span class="s3">= </span><span class="s1">Block</span><span class="s3">(</span><span class="s1">floor</span><span class="s3">, -</span><span class="s4">100</span><span class="s3">, </span><span class="s1">WINDOW_HEIGHT </span><span class="s3">- </span><span class="s4">75</span><span class="s3">, </span><span class="s4">8000</span><span class="s3">, </span><span class="s4">200</span><span class="s3">, </span><span class="s4">20</span><span class="s3">, </span><span class="s4">40</span><span class="s3">)</span>
+
+    <span class="s1">run </span><span class="s3">= </span><span class="s2">True</span>
+
+    <span class="s2">while </span><span class="s1">run</span><span class="s3">:</span>
+
+        <span class="s0">#delay game by 50 milaseconds</span>
+        <span class="s1">pygame</span><span class="s3">.</span><span class="s1">time</span><span class="s3">.</span><span class="s1">delay</span><span class="s3">(</span><span class="s4">50</span><span class="s3">)</span>
+
+        <span class="s0">#create background</span>
+        <span class="s1">setting</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+
+        <span class="s0">#analyze when keys get pressed</span>
+        <span class="s1">keys </span><span class="s3">= </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">key</span><span class="s3">.</span><span class="s1">get_pressed</span><span class="s3">()</span>
+
+        <span class="s0">#move character to the left when the a key is pressed</span>
+        <span class="s2">if </span><span class="s1">keys</span><span class="s3">[</span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">K_a</span><span class="s3">]:</span>
+
+            <span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">-= </span><span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_a</span>
+
+            <span class="s0">#if the charcter moves to the right side of the screen before hiting the check point</span>
+            <span class="s2">if </span><span class="s3">((</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s1">ball</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &lt;= </span><span class="s4">260</span><span class="s3">) </span><span class="s2">and </span><span class="s3">((</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s1">ball</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &gt; </span><span class="s1">front_check</span><span class="s3">.</span><span class="s1">x</span><span class="s3">):</span>
+
+                <span class="s0">#character will stop at x = 260, while objects move in the opposite direction</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_a </span><span class="s3">= </span><span class="s4">0</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_d </span><span class="s3">= </span><span class="s4">12</span>
+
+
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">setting</span><span class="s3">)</span>
+
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike1</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike2</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike3</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike4</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike5</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike6</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike7</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike8</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike9</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike10</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike11</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike12</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike13</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike14</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike15</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike16</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike17</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike18</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike19</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike20</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike21</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike22</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike23</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike24</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike25</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike26</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike27</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike28</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike29</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike30</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike31</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike32</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike33</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike34</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike35</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike36</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike37</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike38</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike39</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike40</span><span class="s3">)</span>
+
+                <span class="s0">##floor spike move right</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">floor_spike1</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">floor_spike2</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">floor_spike3</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">floor_spike4</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">floor_spike5</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">floor_spike6</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">floor_spike7</span><span class="s3">)</span>
+
+
+
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">wall_one</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">wall_two</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">wall_three</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">door</span><span class="s3">)</span>
+
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">front_check</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">back_check</span><span class="s3">)</span>
+
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike5_check</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike8_check</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike10_check</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike14_check</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike18_check</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike24_check</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike28_check</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike33_check</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike38_check</span><span class="s3">)</span>
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">spike39_check</span><span class="s3">)</span>
+
+                <span class="s1">move_right</span><span class="s3">(</span><span class="s1">floor_one</span><span class="s3">)</span>
+
+                <span class="s0">#when the character moves past the check point on the left side of the map</span>
+                <span class="s2">if </span><span class="s3">((</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s1">ball</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &lt;= </span><span class="s1">front_check</span><span class="s3">.</span><span class="s1">x</span><span class="s3">):</span>
+                    <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_a </span><span class="s3">= </span><span class="s4">12</span>
+                    <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_d </span><span class="s3">= </span><span class="s4">12</span>
+
+            <span class="s0"># if the charcter is in the middle part of the screen (between 260 - 940)</span>
+            <span class="s2">if </span><span class="s3">(</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">&gt; </span><span class="s4">260</span><span class="s3">) </span><span class="s2">and </span><span class="s3">(</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">&lt; </span><span class="s4">940</span><span class="s3">):</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_a </span><span class="s3">= </span><span class="s4">12</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_d </span><span class="s3">= </span><span class="s4">12</span>
+
+            <span class="s0">#if the character touches the wall on the left side of the map</span>
+            <span class="s2">if </span><span class="s3">(</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s1">ball</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &lt;= (</span><span class="s1">wall_one</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+ </span><span class="s1">wall_one</span><span class="s3">.</span><span class="s1">width</span><span class="s3">):</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_a </span><span class="s3">= </span><span class="s4">0</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_d </span><span class="s3">= </span><span class="s4">12</span>
+
+        <span class="s0">#move character to the right when the d key is pressed</span>
+        <span class="s2">if </span><span class="s1">keys</span><span class="s3">[</span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">K_d</span><span class="s3">]:</span>
+
+            <span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+= </span><span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_d</span>
+
+            <span class="s2">if </span><span class="s3">((</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+ </span><span class="s1">ball</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &gt;= </span><span class="s4">940</span><span class="s3">) </span><span class="s2">and </span><span class="s3">((</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+ </span><span class="s1">ball</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &lt; </span><span class="s1">back_check</span><span class="s3">.</span><span class="s1">x</span><span class="s3">):</span>
+
+                <span class="s0"># character will stop at x = 940, while objects move in the opposite direction</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_a </span><span class="s3">= </span><span class="s4">12</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_d </span><span class="s3">= </span><span class="s4">0</span>
+
+
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">setting</span><span class="s3">)</span>
+
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike1</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike2</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike3</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike4</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike5</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike6</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike7</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike8</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike9</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike10</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike11</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike12</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike13</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike14</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike15</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike16</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike17</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike18</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike19</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike20</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike21</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike22</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike23</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike24</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike25</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike26</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike27</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike28</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike29</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike30</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike31</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike32</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike33</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike34</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike35</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike36</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike37</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike38</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike39</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike40</span><span class="s3">)</span>
+
+                <span class="s0">#move left for floor spikes</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">floor_spike1</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">floor_spike2</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">floor_spike3</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">floor_spike4</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">floor_spike5</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">floor_spike6</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">floor_spike7</span><span class="s3">)</span>
+
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">wall_one</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">wall_two</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">wall_three</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">door</span><span class="s3">)</span>
+
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">front_check</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">back_check</span><span class="s3">)</span>
+
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike5_check</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike8_check</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike10_check</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike14_check</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike18_check</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike24_check</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike28_check</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike33_check</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike38_check</span><span class="s3">)</span>
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">spike39_check</span><span class="s3">)</span>
+
+                <span class="s1">move_left</span><span class="s3">(</span><span class="s1">floor_one</span><span class="s3">)</span>
+
+            <span class="s0"># if the charcter is in the middle part of the screen (between 260 - 940)</span>
+            <span class="s2">if </span><span class="s3">(</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">&gt; </span><span class="s4">260</span><span class="s3">) </span><span class="s2">and </span><span class="s3">(</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">&lt; </span><span class="s4">940</span><span class="s3">):</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_a </span><span class="s3">= </span><span class="s4">12</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_d </span><span class="s3">= </span><span class="s4">12</span>
+
+            <span class="s0"># if the chacter moves past the checkpoint of the right side of the map,</span>
+            <span class="s0"># only let the character to be able to move</span>
+            <span class="s2">if </span><span class="s3">((</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+ </span><span class="s1">ball</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &gt;= </span><span class="s1">back_check</span><span class="s3">.</span><span class="s1">x</span><span class="s3">):</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_a </span><span class="s3">= </span><span class="s4">12</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">vel_d </span><span class="s3">= </span><span class="s4">12</span>
+
+        <span class="s2">if not </span><span class="s3">(</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">jump</span><span class="s3">):</span>
+
+            <span class="s2">if </span><span class="s1">keys</span><span class="s3">[</span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">K_SPACE</span><span class="s3">]:</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">jump </span><span class="s3">= </span><span class="s2">True</span>
+
+        <span class="s2">else</span><span class="s3">:</span>
+            <span class="s2">if </span><span class="s1">ball</span><span class="s3">.</span><span class="s1">jump_count </span><span class="s3">&gt;= -</span><span class="s4">7</span><span class="s3">:</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">y </span><span class="s3">-= (</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">jump_count </span><span class="s3">* </span><span class="s1">abs</span><span class="s3">(</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">jump_count</span><span class="s3">))</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">jump_count </span><span class="s3">-= </span><span class="s4">1</span>
+
+            <span class="s2">else</span><span class="s3">:</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">jump_count </span><span class="s3">= </span><span class="s4">7</span>
+                <span class="s1">ball</span><span class="s3">.</span><span class="s1">jump </span><span class="s3">= </span><span class="s2">False</span>
+
+        <span class="s0">#create all in game objects, including player</span>
+        <span class="s1">ball</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+
+        <span class="s1">wall_one</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">wall_two</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">wall_three</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">wall_one</span><span class="s3">.</span><span class="s1">mask</span><span class="s3">()</span>
+        <span class="s1">wall_two</span><span class="s3">.</span><span class="s1">mask</span><span class="s3">()</span>
+        <span class="s1">wall_three</span><span class="s3">.</span><span class="s1">mask</span><span class="s3">()</span>
+
+        <span class="s1">door</span><span class="s3">.</span><span class="s1">escape_door</span><span class="s3">()</span>
+
+        <span class="s1">floor_one</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">floor_one</span><span class="s3">.</span><span class="s1">mask</span><span class="s3">()</span>
+
+        <span class="s1">spike1</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike2</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike3</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike4</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike5</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike6</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike7</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike8</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike9</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike10</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike11</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike12</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike13</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike14</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike15</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike16</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike17</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike18</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike19</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike20</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike21</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike22</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike23</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike24</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike25</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike26</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike27</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike28</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike29</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike30</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike31</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike32</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike33</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike34</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike35</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike36</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike37</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike38</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike39</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">spike40</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+
+        <span class="s0">##all floor spikes create</span>
+        <span class="s1">floor_spike1</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">floor_spike2</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">floor_spike3</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">floor_spike4</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">floor_spike5</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">floor_spike5</span><span class="s3">. </span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">floor_spike6</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+        <span class="s1">floor_spike7</span><span class="s3">.</span><span class="s1">create</span><span class="s3">()</span>
+
+        <span class="s1">falling_spike_collision</span><span class="s3">(</span><span class="s1">spike5</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">spike5_check</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">falling_spike_collision</span><span class="s3">(</span><span class="s1">spike8</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">spike8_check</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">falling_spike_collision</span><span class="s3">(</span><span class="s1">spike10</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">spike10_check</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">falling_spike_collision</span><span class="s3">(</span><span class="s1">spike14</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">spike14_check</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">falling_spike_collision</span><span class="s3">(</span><span class="s1">spike18</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">spike18_check</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">falling_spike_collision</span><span class="s3">(</span><span class="s1">spike24</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">spike24_check</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">falling_spike_collision</span><span class="s3">(</span><span class="s1">spike28</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">spike28_check</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">falling_spike_collision</span><span class="s3">(</span><span class="s1">spike33</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">spike33_check</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">falling_spike_collision</span><span class="s3">(</span><span class="s1">spike38</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">spike38_check</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">falling_spike_collision</span><span class="s3">(</span><span class="s1">spike39</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">spike39_check</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+
+        <span class="s0">#all floor spike collision</span>
+        <span class="s1">floor_spike_collision</span><span class="s3">(</span><span class="s1">floor_spike1</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">floor_spike_collision</span><span class="s3">(</span><span class="s1">floor_spike2</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">floor_spike_collision</span><span class="s3">(</span><span class="s1">floor_spike3</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">floor_spike_collision</span><span class="s3">(</span><span class="s1">floor_spike4</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">floor_spike_collision</span><span class="s3">(</span><span class="s1">floor_spike5</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">floor_spike_collision</span><span class="s3">(</span><span class="s1">floor_spike6</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+        <span class="s1">floor_spike_collision</span><span class="s3">(</span><span class="s1">floor_spike7</span><span class="s3">, </span><span class="s1">ball</span><span class="s3">, </span><span class="s1">player_health</span><span class="s3">)</span>
+
+
+
+        <span class="s1">player_health</span><span class="s3">.</span><span class="s1">spawn_health</span><span class="s3">()</span>
+
+        <span class="s0">#blit the death screen when the player dies</span>
+        <span class="s2">if </span><span class="s1">player_health</span><span class="s3">.</span><span class="s1">width </span><span class="s3">&lt;= </span><span class="s4">0</span><span class="s3">:</span>
+
+            <span class="s1">pygame</span><span class="s3">.</span><span class="s1">mixer</span><span class="s3">.</span><span class="s1">music</span><span class="s3">.</span><span class="s1">stop</span><span class="s3">()</span>
+
+            <span class="s1">WINDOW</span><span class="s3">.</span><span class="s1">blit</span><span class="s3">(</span><span class="s1">FAIL_SCREEN</span><span class="s3">, (</span><span class="s4">0</span><span class="s3">,</span><span class="s4">0</span><span class="s3">))</span>
+
+            <span class="s0"># if the player clicks r to replay the game, rest everything in their</span>
+            <span class="s0"># original postion and restart the music</span>
+            <span class="s2">if </span><span class="s1">keys</span><span class="s3">[</span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">K_r</span><span class="s3">]:</span>
+
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">ball</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s1">WINDOW_HEIGHT </span><span class="s3">- </span><span class="s4">135</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">setting</span><span class="s3">, </span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">wall_one</span><span class="s3">, </span><span class="s4">0</span><span class="s3">,</span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">wall_two</span><span class="s3">, -</span><span class="s4">188</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">wall_three</span><span class="s3">, </span><span class="s4">3700</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">door</span><span class="s3">,</span><span class="s4">3700</span><span class="s3">,</span><span class="s4">800</span><span class="s3">)</span>
+
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike1</span><span class="s3">, </span><span class="s4">547</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike2</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike3</span><span class="s3">, </span><span class="s4">786</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike4</span><span class="s3">, </span><span class="s4">814</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike5</span><span class="s3">, </span><span class="s4">888</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike6</span><span class="s3">, </span><span class="s4">929</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike7</span><span class="s3">, </span><span class="s4">998</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike8</span><span class="s3">, </span><span class="s4">1028</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike9</span><span class="s3">, </span><span class="s4">1100</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike10</span><span class="s3">, </span><span class="s4">1168</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike11</span><span class="s3">, </span><span class="s4">1209</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike12</span><span class="s3">, </span><span class="s4">1304</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike13</span><span class="s3">, </span><span class="s4">1399</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike14</span><span class="s3">, </span><span class="s4">1484</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike15</span><span class="s3">, </span><span class="s4">1563</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike16</span><span class="s3">, </span><span class="s4">1664</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike17</span><span class="s3">, </span><span class="s4">1811</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike18</span><span class="s3">, </span><span class="s4">1900</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike19</span><span class="s3">, </span><span class="s4">2001</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike20</span><span class="s3">, </span><span class="s4">2099</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike21</span><span class="s3">, </span><span class="s4">2152</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike22</span><span class="s3">, </span><span class="s4">2271</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike23</span><span class="s3">, </span><span class="s4">2299</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike24</span><span class="s3">, </span><span class="s4">2331</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike25</span><span class="s3">, </span><span class="s4">2399</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike26</span><span class="s3">, </span><span class="s4">2471</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike27</span><span class="s3">, </span><span class="s4">2572</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike28</span><span class="s3">, </span><span class="s4">2621</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike29</span><span class="s3">, </span><span class="s4">2700</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike30</span><span class="s3">, </span><span class="s4">2789</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike31</span><span class="s3">, </span><span class="s4">2850</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike32</span><span class="s3">, </span><span class="s4">2926</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike33</span><span class="s3">, </span><span class="s4">2999</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike34</span><span class="s3">, </span><span class="s4">3041</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike35</span><span class="s3">, </span><span class="s4">3152</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike36</span><span class="s3">, </span><span class="s4">3198</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike37</span><span class="s3">, </span><span class="s4">3278</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike38</span><span class="s3">, </span><span class="s4">3333</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike39</span><span class="s3">, </span><span class="s4">3479</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike40</span><span class="s3">, </span><span class="s4">3542</span><span class="s3">, </span><span class="s4">0</span><span class="s3">)</span>
+
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">front_check</span><span class="s3">, </span><span class="s4">250</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">back_check</span><span class="s3">, </span><span class="s4">3550</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike5_check</span><span class="s3">, </span><span class="s1">spike5</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike8_check</span><span class="s3">, </span><span class="s1">spike8</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike10_check</span><span class="s3">, </span><span class="s1">spike10</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike14_check</span><span class="s3">, </span><span class="s1">spike14</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike18_check</span><span class="s3">, </span><span class="s1">spike18</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike24_check</span><span class="s3">, </span><span class="s1">spike24</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike28_check</span><span class="s3">, </span><span class="s1">spike28</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike33_check</span><span class="s3">, </span><span class="s1">spike33</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike38_check</span><span class="s3">, </span><span class="s1">spike38</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">spike39_check</span><span class="s3">, </span><span class="s1">spike39</span><span class="s3">.</span><span class="s1">x </span><span class="s3">- </span><span class="s4">70</span><span class="s3">, </span><span class="s4">600</span><span class="s3">)</span>
+
+                <span class="s0">##resets for floor spikes</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">floor_spike1</span><span class="s3">, </span><span class="s4">600</span><span class="s3">, </span><span class="s4">624</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">floor_spike2</span><span class="s3">, </span><span class="s4">1235</span><span class="s3">, </span><span class="s4">624</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">floor_spike3</span><span class="s3">, </span><span class="s4">1600</span><span class="s3">, </span><span class="s4">624</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">floor_spike4</span><span class="s3">, </span><span class="s4">2100</span><span class="s3">, </span><span class="s4">624</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">floor_spike5</span><span class="s3">, </span><span class="s4">2400</span><span class="s3">, </span><span class="s4">624</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">floor_spike6</span><span class="s3">, </span><span class="s4">2800</span><span class="s3">, </span><span class="s4">624</span><span class="s3">)</span>
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">floor_spike7</span><span class="s3">, </span><span class="s4">3152</span><span class="s3">, </span><span class="s4">624</span><span class="s3">)</span>
+
+                <span class="s1">reset_object</span><span class="s3">(</span><span class="s1">floor_one</span><span class="s3">, -</span><span class="s4">100</span><span class="s3">, </span><span class="s1">WINDOW_HEIGHT </span><span class="s3">- </span><span class="s4">75</span><span class="s3">)</span>
+
+                <span class="s1">spike5</span><span class="s3">.</span><span class="s1">reset_vel</span><span class="s3">()</span>
+                <span class="s1">spike8</span><span class="s3">.</span><span class="s1">reset_vel</span><span class="s3">()</span>
+                <span class="s1">spike10</span><span class="s3">.</span><span class="s1">reset_vel</span><span class="s3">()</span>
+                <span class="s1">spike14</span><span class="s3">.</span><span class="s1">reset_vel</span><span class="s3">()</span>
+                <span class="s1">spike18</span><span class="s3">.</span><span class="s1">reset_vel</span><span class="s3">()</span>
+                <span class="s1">spike24</span><span class="s3">.</span><span class="s1">reset_vel</span><span class="s3">()</span>
+                <span class="s1">spike28</span><span class="s3">.</span><span class="s1">reset_vel</span><span class="s3">()</span>
+                <span class="s1">spike33</span><span class="s3">.</span><span class="s1">reset_vel</span><span class="s3">()</span>
+                <span class="s1">spike38</span><span class="s3">.</span><span class="s1">reset_vel</span><span class="s3">()</span>
+                <span class="s1">spike39</span><span class="s3">.</span><span class="s1">reset_vel</span><span class="s3">()</span>
+
+                <span class="s1">pygame</span><span class="s3">.</span><span class="s1">mixer</span><span class="s3">.</span><span class="s1">music</span><span class="s3">.</span><span class="s1">play</span><span class="s3">(-</span><span class="s4">1</span><span class="s3">)</span>
+
+                <span class="s1">player_health</span><span class="s3">.</span><span class="s1">reset_health</span><span class="s3">()</span>
+
+        <span class="s0">#when the character makes it to the end, blit the escaped screen</span>
+        <span class="s2">if </span><span class="s3">(</span><span class="s1">ball</span><span class="s3">.</span><span class="s1">x </span><span class="s3">+ </span><span class="s1">ball</span><span class="s3">.</span><span class="s1">radius</span><span class="s3">) &gt;= </span><span class="s1">wall_three</span><span class="s3">.</span><span class="s1">x</span><span class="s3">:</span>
+
+            <span class="s1">pygame</span><span class="s3">.</span><span class="s1">mixer</span><span class="s3">.</span><span class="s1">music</span><span class="s3">.</span><span class="s1">stop</span><span class="s3">()</span>
+            <span class="s1">WINDOW</span><span class="s3">.</span><span class="s1">blit</span><span class="s3">(</span><span class="s1">ESCAPE_SCREEN</span><span class="s3">, (</span><span class="s4">0</span><span class="s3">, </span><span class="s4">0</span><span class="s3">))</span>
+
+
+        <span class="s1">pygame</span><span class="s3">.</span><span class="s1">display</span><span class="s3">.</span><span class="s1">update</span><span class="s3">()</span>
+
+
+        <span class="s0"># Close the game when the user clicks the &quot;x&quot; in the corner</span>
+        <span class="s2">for </span><span class="s1">event </span><span class="s2">in </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">event</span><span class="s3">.</span><span class="s1">get</span><span class="s3">():</span>
+            <span class="s2">if </span><span class="s1">event</span><span class="s3">.</span><span class="s1">type </span><span class="s3">== </span><span class="s1">pygame</span><span class="s3">.</span><span class="s1">QUIT</span><span class="s3">:</span>
+                <span class="s1">run </span><span class="s3">= </span><span class="s2">False</span>
+
+    <span class="s1">pygame</span><span class="s3">.</span><span class="s1">quit</span><span class="s3">()</span>
+
+
+<span class="s1">print</span><span class="s3">(</span><span class="s1">main</span><span class="s3">())</span></pre>
+</body>
+</html>
